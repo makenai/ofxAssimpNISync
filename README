@@ -1,0 +1,32 @@
+
+Openframeworks addon to simplify posing Assimp bones with OpenNI joints.
+
+___________________________________________
+*** Note this addon is not complete yet ***
+-------------------------------------------
+
+--------------
+Installation :
+--------------
+
+- Get ofxAssimpModelLoader Addon
+- Get ofxOpenNI Addon
+- Clone this addon into you openframeworks/addon folder
+
+  git clone git@github.com:alinakipoglu/ofxAssimpOpenNISkeletonSync.git [your_openframeworks_directory]/addons/ofxAssimpOpenNISkeletonSync/
+
+- Add ofxAssimpModelLoader to your project
+- Add ofxOpenNI to your project
+- Drag ofxAssimpOpenNISkeletonSync/src folder to your favorite IDE
+
+-------
+Usage :
+-------
+
+- Create an instance of ofxAssimpOpenNISkeletonSync lets say assimpNISync
+- call with an OpenNIUserGenerator and AssimModelLoder assimpNISync.setup( OpenNIUSerGenerator, AssimpModelLoder )
+- set new sync by calling syncBoneAndOpenNIJoint with bone name and associated mesh index, user id and finally OpenNI Joint
+- call update
+
+
+Tested with OF 007 Pre
