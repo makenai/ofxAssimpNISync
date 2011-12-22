@@ -1,8 +1,10 @@
-
 Openframeworks addon to simplify posing Assimp bones with OpenNI joints.
 
 ___________________________________________
-*** Note this addon is not complete yet ***
+*******************************************
+Note this addon is not complete yet. Its
+still need community help to get bone joint
+synchronization work.
 -------------------------------------------
 
 --------------
