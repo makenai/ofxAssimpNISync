@@ -1,9 +1,7 @@
 //
-//  ofxAssimpNISyncLoader.cpp
-//  InteractiveOutdoor
+//  ofxAssimpModelLoader.cpp
 //
-//  Created by Ali Nakipoglu on 12/23/11.
-//  Copyright (c) 2011 Publicis Modem Turkiye. All rights reserved.
+//  Created by Ali Nakipoglu on 12/21/11.
 //
 
 #include <iostream>

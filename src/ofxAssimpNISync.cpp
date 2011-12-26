@@ -24,10 +24,10 @@ ofxAssimpNISync::~ofxAssimpNISync()
 
 void ofxAssimpNISync::setup(ofxAssimpNISyncModelLoader *model, ofxUserGenerator *userGenerator)
 {
-    mModelLoader        = model;
-    mUserGenerator      = userGenerator;
+    mModelLoader                = model;
+    mUserGenerator              = userGenerator;
     
-    mSetup              = true;
+    mSetup                      = true;
 }
 
 ofxUserGenerator* ofxAssimpNISync::getUserGenerator()
@@ -227,13 +227,20 @@ void ofxAssimpNISync::removeAllSyncs()
 
 void ofxAssimpNISync::listBoneNames()
 {
-    const vector<string> boneNames      = getBoneNames();
+    const aiScene*  aiScene = getAiScene( mModelLoader );
     
-    vector<string>::const_iterator it   = boneNames.begin();
-    
-    for ( ; it != boneNames.end(); ++it )
+    for ( unsigned int i = 0; i < aiScene->mNumMeshes; i++ )
     {
-        cout << "ofxAssimpNISync Listing Bone Name: " << *it << endl;
+        for ( unsigned int j = 0; j < aiScene->mMeshes[ i ]->mNumBones; j++ )
+        {
+            ofLogVerbose( "ofxAssimpNISync"
+                         , "Listing Mesh index "
+                         + ofToString(i)
+                         + " name "
+                         + string( aiScene->mMeshes[ i ]->mName.data )
+                         + " Bone Name : "
+                         + string( aiScene->mMeshes[ i ]->mBones[ j ]->mName.data ) );
+        }
     }
 }
 

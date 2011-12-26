@@ -15,7 +15,7 @@
 /*
  *  Default value assigned to check OpenNI joints.
  */
-#define DEFAULT_REQUIRED_JOINT_CONFIDENCE 0.0f
+#define DEFAULT_REQUIRED_JOINT_CONFIDENCE 0.3f
 
 
 class ofxAssimpNISync
