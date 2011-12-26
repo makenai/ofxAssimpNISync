@@ -4,7 +4,7 @@ ___________________________________________
 *******************************************
 Note this addon is not complete yet. Its
 still needs community help to get bone joint
-synchronization work.
+synchronization to work.
 -------------------------------------------
 
 --------------
@@ -13,9 +13,9 @@ Installation :
 
 - Get ofxAssimpModelLoader Addon
 - Get ofxOpenNI Addon
-- Clone this addon into you openframeworks/addon folder
+- Clone this addon into your openframeworks/addon folder
 
-  git clone git@github.com:alinakipoglu/ofxAssimpOpenNISkeletonSync.git [your_openframeworks_directory]/addons/ofxAssimpOpenNISkeletonSync/
+  git clone git@github.com:alinakipoglu/ofxAssimpNISync.git [your_openframeworks_directory]/addons/ofxAssimpNISync/
 
 - Add ofxAssimpModelLoader to your project
 - Add ofxOpenNI to your project
@@ -30,6 +30,7 @@ Usage :
 - call assimpNISync.setup with model loader and and openNI user generator.
 - set new sync by calling syncBoneAndOpenNIJoint with bone name and associated mesh index, user id and finally OpenNI Joint
 - call update
+- draw model in draw call.
 
 
 Tested with OF 007 Pre
