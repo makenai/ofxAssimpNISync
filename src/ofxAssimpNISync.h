@@ -1,5 +1,5 @@
 //
-//  ofxAssimpOpenNISkeletonSync.h
+//  ofxAssimpNISync.h
 //
 //  Created by Ali Nakipoglu on 12/21/11.
 //
@@ -10,6 +10,7 @@
 
 #include "ofxOpenNI.h"
 #include "ofxAssimpModelLoader.h"
+#include "ofxAssimpNISyncModelLoader.h"
 
 /*
  *  Default value assigned to check OpenNI joints.
@@ -17,15 +18,15 @@
 #define DEFAULT_REQUIRED_JOINT_CONFIDENCE 0.0f
 
 
-class ofxAssimpOpenNISkeletonSync
+class ofxAssimpNISync
 {
     
 public:
     
     // Constructor & Deconstructor
     
-    ofxAssimpOpenNISkeletonSync();
-    ~ofxAssimpOpenNISkeletonSync();
+    ofxAssimpNISync();
+    ~ofxAssimpNISync();
     
 public:
     
@@ -33,7 +34,7 @@ public:
      *  Setups synchronization. 
      *  model and userGenerator pointers must be valid and this function call is required.
      */
-    void                        setup( ofxAssimpModelLoader* model, ofxUserGenerator* userGenerator );
+    void                        setup( ofxAssimpNISyncModelLoader* model, ofxUserGenerator* userGenerator );
     
     /*
      *  Returns ofxOpenNIUserGenerator
@@ -43,7 +44,7 @@ public:
     /*
      *  Return AssimModelLoader
      */
-    ofxAssimpModelLoader*       getModel();
+    ofxAssimpNISyncModelLoader* getModel();
     
     /*
      *  Updates all synchronizations.
@@ -120,7 +121,7 @@ protected:
     // Pointer to required userGenerator and aiScene
     
     ofxUserGenerator*                           mUserGenerator;
-    ofxAssimpModelLoader*                       mModelLoader;
+    ofxAssimpNISyncModelLoader*                 mModelLoader;
     
     /*
      *  Bool to hold setup method called or not.
@@ -141,4 +142,9 @@ protected:
      *  Required confidence value to check OpenNI joints
      */
     float                                       mRequiredJointConfidence;
+    
+    /*
+     *  Map to hold new per bone matrices
+     */
+    BoneMatrices                                mBoneMatrices;
 };

@@ -1,14 +1,14 @@
 //
-//  ofxAssimpOpenNISkeletonSync.cpp
+//  ofxAssimpNISync.cpp
 //
 //  Created by Ali Nakipoglu on 12/21/11.
 //
 
 #include <iostream>
 
-#include "ofxAssimpOpenNISkeletonSync.h"
+#include "ofxAssimpNISync.h"
 
-ofxAssimpOpenNISkeletonSync::ofxAssimpOpenNISkeletonSync()
+ofxAssimpNISync::ofxAssimpNISync()
 {
     mUserGenerator              = NULL;
     mModelLoader                = NULL;
@@ -19,10 +19,10 @@ ofxAssimpOpenNISkeletonSync::ofxAssimpOpenNISkeletonSync()
     mRequiredJointConfidence    = DEFAULT_REQUIRED_JOINT_CONFIDENCE;
 };
 
-ofxAssimpOpenNISkeletonSync::~ofxAssimpOpenNISkeletonSync()
+ofxAssimpNISync::~ofxAssimpNISync()
 {};
 
-void ofxAssimpOpenNISkeletonSync::setup(ofxAssimpModelLoader *model, ofxUserGenerator *userGenerator)
+void ofxAssimpNISync::setup(ofxAssimpNISyncModelLoader *model, ofxUserGenerator *userGenerator)
 {
     mModelLoader        = model;
     mUserGenerator      = userGenerator;
@@ -30,24 +30,26 @@ void ofxAssimpOpenNISkeletonSync::setup(ofxAssimpModelLoader *model, ofxUserGene
     mSetup              = true;
 }
 
-ofxUserGenerator* ofxAssimpOpenNISkeletonSync::getUserGenerator()
+ofxUserGenerator* ofxAssimpNISync::getUserGenerator()
 {
     return mUserGenerator;
 }
 
-ofxAssimpModelLoader* ofxAssimpOpenNISkeletonSync::getModel()
+ofxAssimpNISyncModelLoader* ofxAssimpNISync::getModel()
 {
     return mModelLoader;
 }
 
-void ofxAssimpOpenNISkeletonSync::update()
+void ofxAssimpNISync::update()
 {
     if ( !mSetup )
     {
-        ofLog( OF_LOG_ERROR, "ofxAssimpOpenNISkeletonSync Cannot update. Setup must be called first!" );
+        ofLog( OF_LOG_ERROR, "ofxAssimpNISync Cannot update. Setup must be called first!" );
         
         return;
     }
+    
+    mBoneMatrices.clear();
     
     const aiScene* scene    = getAiScene( mModelLoader );
     
@@ -80,7 +82,7 @@ void ofxAssimpOpenNISkeletonSync::update()
                         XnSkeletonJoint joint   = boneIt->second;
                         
                         XnSkeletonJointOrientation  jointOrientation;
-                        XnSkeletonJointPosition jointPosition;
+                        XnSkeletonJointPosition     jointPosition;
                         
                         mUserGenerator->getXnUserGenerator().GetSkeletonCap().GetSkeletonJointOrientation( trackedUser->id, joint, jointOrientation );
                         mUserGenerator->getXnUserGenerator().GetSkeletonCap().GetSkeletonJointPosition( trackedUser->id, joint, jointPosition );
@@ -89,42 +91,10 @@ void ofxAssimpOpenNISkeletonSync::update()
                         {
                             float*  orientationData         = jointOrientation.orientation.elements;
                             
-                            aiMatrix4x4 currentJointAIMat(orientationData[0], orientationData[1], orientationData[2], 0.0f,
-                                                          orientationData[3], orientationData[4], orientationData[5], 0.0f,
-                                                          orientationData[6], orientationData[7], orientationData[8], 0.0f,
-                                                          0.0f, 0.0f, 0.0f, 1.0f);
-                            
-                            
-                            aiQuaternion    currentBoneOri;
-                            aiQuaternion    currentJointOri;
-                            aiQuaternion    resultOri;
-                            
-                            aiVector3D      currentBonePos;
-                            aiVector3D      currentJointPos;
-                            
-                            aiVector3D      currentBoneScale;
-                            aiVector3D      currentJointScale;
-                            
-                            bone->mOffsetMatrix.Decompose(currentBoneScale, currentBoneOri, currentBonePos);
-                            currentJointAIMat.Decompose(currentJointScale, currentJointOri, currentJointPos);
-                            
-                            ofQuaternion    newBoneOri( currentBoneOri.x, currentBoneOri.y, currentBoneOri.z, currentBoneOri.w );
-                            ofQuaternion    newJointOri( currentJointOri.x, currentJointOri.y, currentJointOri.z, currentJointOri.w );
-                            
-                            ofMatrix4x4     newMatrix;
-                            
-                            newMatrix.rotate(newBoneOri * newJointOri);
-                            newMatrix.translate( currentBonePos.x, currentBonePos.y, currentBonePos.y);
-                            newMatrix.scale(currentBoneScale.x, currentBoneScale.y, currentBoneScale.z);
-                            
-                            ofVec4f         *mat            = newMatrix._mat;
-                            
-                            aiMatrix4x4     resultMatrix(   mat[0][0], mat[0][1], mat[0][2], mat[0][3],
-                                                            mat[1][0], mat[1][1], mat[1][2], mat[1][3],
-                                                            mat[2][0], mat[2][1], mat[2][2], mat[2][3],
-                                                            mat[3][0], mat[3][1], mat[3][2], mat[3][3]);
-                            
-                            bone->mOffsetMatrix             = resultMatrix;
+                            mBoneMatrices[bone]             = aiMatrix4x4(  orientationData[0], orientationData[1], orientationData[2], 0.0f,
+                                                                            orientationData[3], orientationData[4], orientationData[5], 0.0f,
+                                                                            orientationData[6], orientationData[7], orientationData[8], 0.0f,
+                                                                            0.0f, 0.0f, 0.0f, 1.0f );
                         }
                     }
                 }
@@ -132,18 +102,20 @@ void ofxAssimpOpenNISkeletonSync::update()
             }
         }
     }
+    
+    mModelLoader->updateSync( mBoneMatrices );
 }
 
-void ofxAssimpOpenNISkeletonSync::setRequiredJointConfidence(float confidence)
+void ofxAssimpNISync::setRequiredJointConfidence(float confidence)
 {
     mRequiredJointConfidence    = confidence;
 }
 
-void ofxAssimpOpenNISkeletonSync::syncBoneAndOpenNIJoint(unsigned int meshIndex, string boneName, unsigned int userID, XnSkeletonJoint joint)
+void ofxAssimpNISync::syncBoneAndOpenNIJoint(unsigned int meshIndex, string boneName, unsigned int userID, XnSkeletonJoint joint)
 {
     if ( !mSetup )
     {
-        ofLog( OF_LOG_ERROR, "ofxAssimpOpenNISkeletonSync Cannot sync bone. Setup must be called first!" );
+        ofLog( OF_LOG_ERROR, "ofxAssimpNISync Cannot sync bone. Setup must be called first!" );
         
         return;
     }
@@ -154,17 +126,17 @@ void ofxAssimpOpenNISkeletonSync::syncBoneAndOpenNIJoint(unsigned int meshIndex,
         {
             if ( !boneNameIsValid( meshIndex, boneName ) )
             {
-                ofLog( OF_LOG_ERROR, "ofxAssimpOpenNISkeletonSync given bone name :" + boneName + " not found in meshIndex : " + ofToString( meshIndex) );
+                ofLog( OF_LOG_ERROR, "ofxAssimpNISync given bone name :" + boneName + " not found in meshIndex : " + ofToString( meshIndex) );
                 
                 return;
             }
         } else {
-            ofLog( OF_LOG_ERROR, "ofxAssimpOpenNISkeletonSync given meshIndex :" + ofToString(meshIndex) + " has no bones" );
+            ofLog( OF_LOG_ERROR, "ofxAssimpNISync given meshIndex :" + ofToString(meshIndex) + " has no bones" );
             
             return;
         }
     } else {
-        ofLog( OF_LOG_ERROR, "ofxAssimpOpenNISkeletonSync given meshIndex :" + ofToString(meshIndex) + " not found" );
+        ofLog( OF_LOG_ERROR, "ofxAssimpNISync given meshIndex :" + ofToString(meshIndex) + " not found" );
         
         return;
     }
@@ -182,7 +154,7 @@ void ofxAssimpOpenNISkeletonSync::syncBoneAndOpenNIJoint(unsigned int meshIndex,
     mSyncData[ userID ][ meshIndex ][ boneName ]    = joint;
 }
 
-void ofxAssimpOpenNISkeletonSync::removeUserSync(int userID)
+void ofxAssimpNISync::removeUserSync(int userID)
 {
     if ( mSyncData.count( userID ) != 0 )
     {
@@ -190,7 +162,7 @@ void ofxAssimpOpenNISkeletonSync::removeUserSync(int userID)
     }
 }
 
-void ofxAssimpOpenNISkeletonSync::removeBoneSync(string boneName)
+void ofxAssimpNISync::removeBoneSync(string boneName)
 {
     PerUserSyncData::iterator   userIt  = mSyncData.begin();
     PerMeshSyncData::iterator   meshIt;
@@ -209,7 +181,7 @@ void ofxAssimpOpenNISkeletonSync::removeBoneSync(string boneName)
     }
 }
 
-void ofxAssimpOpenNISkeletonSync::removeJointSync(XnSkeletonJoint joint)
+void ofxAssimpNISync::removeJointSync(XnSkeletonJoint joint)
 {
     PerUserSyncData::iterator   userIt  = mSyncData.begin();
     PerMeshSyncData::iterator   meshIt;
@@ -234,7 +206,7 @@ void ofxAssimpOpenNISkeletonSync::removeJointSync(XnSkeletonJoint joint)
     }
 }
 
-void ofxAssimpOpenNISkeletonSync::removeMeshSync(int meshIndex)
+void ofxAssimpNISync::removeMeshSync(int meshIndex)
 {
     PerUserSyncData::iterator   userIt  = mSyncData.begin();
     PerMeshSyncData::iterator   meshIt;
@@ -248,12 +220,12 @@ void ofxAssimpOpenNISkeletonSync::removeMeshSync(int meshIndex)
     }
 }
 
-void ofxAssimpOpenNISkeletonSync::removeAllSyncs()
+void ofxAssimpNISync::removeAllSyncs()
 {
     mSyncData.clear();
 }
 
-void ofxAssimpOpenNISkeletonSync::listBoneNames()
+void ofxAssimpNISync::listBoneNames()
 {
     const vector<string> boneNames      = getBoneNames();
     
@@ -261,11 +233,11 @@ void ofxAssimpOpenNISkeletonSync::listBoneNames()
     
     for ( ; it != boneNames.end(); ++it )
     {
-        cout << "ofxAssimpOpenNISkeletonSync Listing Bone Name: " << *it << endl;
+        cout << "ofxAssimpNISync Listing Bone Name: " << *it << endl;
     }
 }
 
-const vector<string>& ofxAssimpOpenNISkeletonSync::getBoneNames()
+const vector<string>& ofxAssimpNISync::getBoneNames()
 {
     if ( !mBoneListCreated )
     {
@@ -275,12 +247,12 @@ const vector<string>& ofxAssimpOpenNISkeletonSync::getBoneNames()
     return mBoneNames;
 }
 
-const aiScene* ofxAssimpOpenNISkeletonSync::getAiScene(ofxAssimpModelLoader *model)
+const aiScene* ofxAssimpNISync::getAiScene(ofxAssimpModelLoader *model)
 {
     return mModelLoader->getAssimpScene();
 }
 
-aiBone* ofxAssimpOpenNISkeletonSync::getBoneNamed(aiMesh *mesh, string boneName)
+aiBone* ofxAssimpNISync::getBoneNamed(aiMesh *mesh, string boneName)
 {    
     for ( unsigned int i = 0; i < mesh->mNumBones; i++ )
     {
@@ -293,11 +265,11 @@ aiBone* ofxAssimpOpenNISkeletonSync::getBoneNamed(aiMesh *mesh, string boneName)
     return NULL;
 }
 
-void ofxAssimpOpenNISkeletonSync::buildBoneNameList()
+void ofxAssimpNISync::buildBoneNameList()
 {
     if ( !mSetup )
     {
-        ofLog( OF_LOG_ERROR, "ofxAssimpOpenNISkeletonSync Cannot build bone name list. Setup must be called first!" );
+        ofLog( OF_LOG_ERROR, "ofxAssimpNISync Cannot build bone name list. Setup must be called first!" );
         
         return;
     }
@@ -315,17 +287,17 @@ void ofxAssimpOpenNISkeletonSync::buildBoneNameList()
     }
 }
 
-bool ofxAssimpOpenNISkeletonSync::meshIndexIsValid(unsigned int meshIndex)
+bool ofxAssimpNISync::meshIndexIsValid(unsigned int meshIndex)
 {
     return meshIndex < getAiScene( mModelLoader )->mNumMeshes;
 }
 
-bool ofxAssimpOpenNISkeletonSync::meshIsValid(unsigned int meshIndex)
+bool ofxAssimpNISync::meshIsValid(unsigned int meshIndex)
 {
     return getAiScene( mModelLoader )->mMeshes[ meshIndex ]->HasBones();
 }
 
-bool ofxAssimpOpenNISkeletonSync::boneNameIsValid( unsigned int meshIndex, string boneName )
+bool ofxAssimpNISync::boneNameIsValid( unsigned int meshIndex, string boneName )
 {    
     return getBoneNamed( getAiScene( mModelLoader )->mMeshes[ meshIndex ], boneName ) != NULL;
 }
