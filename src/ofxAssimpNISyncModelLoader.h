@@ -7,7 +7,8 @@
 #pragma once
 
 #include "ofMain.h"
-
+#include "aiMesh.h"
+#include "aiScene.h"
 #include "ofxAssimpModelLoader.h"
 
 typedef map<const aiBone*, aiMatrix4x4> BoneMatrices;

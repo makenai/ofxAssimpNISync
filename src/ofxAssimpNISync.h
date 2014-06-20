@@ -34,12 +34,12 @@ public:
      *  Setups synchronization. 
      *  model and userGenerator pointers must be valid and this function call is required.
      */
-    void                        setup( ofxAssimpNISyncModelLoader* model, ofxUserGenerator* userGenerator );
+    void                        setup( ofxAssimpNISyncModelLoader* model, ofxOpenNI* device );
     
     /*
      *  Returns ofxOpenNIUserGenerator
      */
-    ofxUserGenerator*           getUserGenerator();
+    ofxOpenNI*           getDevice();
     
     /*
      *  Return AssimModelLoader
@@ -120,7 +120,7 @@ protected:
     
     // Pointer to required userGenerator and aiScene
     
-    ofxUserGenerator*                           mUserGenerator;
+    ofxOpenNI*                                  openNIDevice;
     ofxAssimpNISyncModelLoader*                 mModelLoader;
     
     /*

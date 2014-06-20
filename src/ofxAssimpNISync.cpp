@@ -10,7 +10,7 @@
 
 ofxAssimpNISync::ofxAssimpNISync()
 {
-    mUserGenerator              = NULL;
+    openNIDevice               = NULL;
     mModelLoader                = NULL;
     
     mSetup                      = false;
@@ -22,17 +22,16 @@ ofxAssimpNISync::ofxAssimpNISync()
 ofxAssimpNISync::~ofxAssimpNISync()
 {};
 
-void ofxAssimpNISync::setup(ofxAssimpNISyncModelLoader *model, ofxUserGenerator *userGenerator)
+void ofxAssimpNISync::setup(ofxAssimpNISyncModelLoader *model, ofxOpenNI *device)
 {
     mModelLoader                = model;
-    mUserGenerator              = userGenerator;
+    openNIDevice                = device;
     
     mSetup                      = true;
 }
 
-ofxUserGenerator* ofxAssimpNISync::getUserGenerator()
-{
-    return mUserGenerator;
+ofxOpenNI* ofxAssimpNISync::getDevice() {
+    return openNIDevice;
 }
 
 ofxAssimpNISyncModelLoader* ofxAssimpNISync::getModel()
@@ -57,13 +56,13 @@ void ofxAssimpNISync::update()
     PerMeshSyncData::iterator   meshIt;
     PerBoneSyncData::iterator   boneIt;
     
-    ofxTrackedUser* trackedUser;
+    ofxOpenNIUser* trackedUser;
     
     for ( ; userIt != mSyncData.end(); ++userIt )
     {
-        trackedUser     = mUserGenerator->getTrackedUser( userIt->first );
+        trackedUser     = &openNIDevice->getTrackedUser( userIt->first );
         
-        if ( trackedUser != NULL && trackedUser->skeletonTracking )
+        if ( trackedUser != NULL && trackedUser->isSkeleton() )
         {
             meshIt      = userIt->second.begin();
             
@@ -84,8 +83,8 @@ void ofxAssimpNISync::update()
                         XnSkeletonJointOrientation  jointOrientation;
                         XnSkeletonJointPosition     jointPosition;
                         
-                        mUserGenerator->getXnUserGenerator().GetSkeletonCap().GetSkeletonJointOrientation( trackedUser->id, joint, jointOrientation );
-                        mUserGenerator->getXnUserGenerator().GetSkeletonCap().GetSkeletonJointPosition( trackedUser->id, joint, jointPosition );
+                        openNIDevice->getUserGenerator().GetSkeletonCap().GetSkeletonJointOrientation( trackedUser->getXnID(), joint, jointOrientation );
+                        openNIDevice->getUserGenerator().GetSkeletonCap().GetSkeletonJointPosition( trackedUser->getXnID(), joint, jointPosition );
                         
                         if ( jointPosition.fConfidence > mRequiredJointConfidence )
                         {
